@@ -36,6 +36,7 @@ function DropinModel(options) {
   this.dependencySuccessCount = 0;
   this.failedDependencies = {};
   this._options = options;
+  this._inputValues = {};
   this._setupComplete = false;
 
   while (this.rootNode.parentNode) {
@@ -164,6 +165,14 @@ DropinModel.prototype._shouldEmitRequestableEvent = function (options) {
   }
 
   return true;
+};
+
+DropinModel.prototype.getInputs = function() {
+  return this._inputValues;
+};
+
+DropinModel.prototype.setInputValue = function(fieldName, value) {
+  this._inputValues[fieldName] = value;
 };
 
 DropinModel.prototype.setPaymentMethodRequestable = function (options) {
