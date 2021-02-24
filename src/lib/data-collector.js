@@ -1,7 +1,6 @@
 'use strict';
 
 var constants = require('../constants');
-var analytics = require('./analytics');
 var assets = require('@braintree/asset-loader');
 var Promise = require('./promise');
 
@@ -30,7 +29,6 @@ DataCollector.prototype.initialize = function () {
   }).then(function (instance) {
     self._instance = instance;
   }).catch(function (err) {
-    analytics.sendEvent(self._config.client, 'data-collector.setup-failed');
     // log the Data Collector setup error
     // but do not prevent Drop-in from loading
     self.log(err);
