@@ -573,14 +573,6 @@ function create(options) {
       braintreeWebError: err
     }));
   }).then(function (clientInstance) {
-    clientInstance = setAnalyticsIntegration(clientInstance);
-
-    if (clientInstance.getConfiguration().authorizationType === 'TOKENIZATION_KEY') {
-      analytics.sendEvent(clientInstance, 'started.tokenization-key');
-    } else {
-      analytics.sendEvent(clientInstance, 'started.client-token');
-    }
-
     return new Promise(function (resolve, reject) {
       new Dropin({
         merchantConfiguration: options,
@@ -596,20 +588,6 @@ function create(options) {
       });
     });
   });
-}
-
-function setAnalyticsIntegration(clientInstance) {
-  var configuration = clientInstance.getConfiguration();
-
-  configuration.analyticsMetadata.integration = constants.INTEGRATION;
-  configuration.analyticsMetadata.integrationType = constants.INTEGRATION;
-  configuration.analyticsMetadata.dropinVersion = VERSION;
-
-  clientInstance.getConfiguration = function () {
-    return configuration;
-  };
-
-  return clientInstance;
 }
 
 // we check for document's existence to support server side rendering
