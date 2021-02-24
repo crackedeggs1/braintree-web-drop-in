@@ -484,6 +484,10 @@ Dropin.prototype._initialize = function (callback) {
   });
 };
 
+Dropin.prototype.getModel = function() {
+  return this._model;
+};
+
 /**
  * Modify your configuration initially set in {@link module:braintree-web-drop-in|`dropin.create`}.
  *
