@@ -310,6 +310,21 @@ CardView.prototype.tokenize = function () {
     });
   }
 
+  var inputs = self.model.getInputs();
+
+  if (inputs.cardholderName && inputs.cardholderName.length && !tokenizeOptions.fieldsToTokenize.cardholderName) {
+    tokenizeOptions.cardholderName = inputs.cardholderName;
+  }
+
+  if (inputs.billingAddress) {
+    tokenizeOptions.billingAddress = {};
+    for (var i in inputs.billingAddress) {
+      if (inputs.billingAddress.length) {
+        tokenizeOptions.billingAddress[i] = inputs.billingAddress[i];
+      }
+    }
+  }
+
   self._isTokenizing = true;
 
   return self.hostedFieldsInstance.tokenize(tokenizeOptions).then(function (payload) {
