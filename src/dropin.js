@@ -1,7 +1,6 @@
 'use strict';
 
 var assign = require('./lib/assign').assign;
-var analytics = require('./lib/analytics');
 var classList = require('@braintree/class-list');
 var constants = require('./constants');
 var DropinError = require('./lib/dropin-error');
@@ -382,12 +381,10 @@ Dropin.prototype._initialize = function (callback) {
   var container = self._merchantConfiguration.container || self._merchantConfiguration.selector;
 
   if (!container) {
-    analytics.sendEvent(self._client, 'configuration-error');
     callback(new DropinError('options.container is required.'));
 
     return;
   } else if (self._merchantConfiguration.container && self._merchantConfiguration.selector) {
-    analytics.sendEvent(self._client, 'configuration-error');
     callback(new DropinError('Must only have one options.selector or options.container.'));
 
     return;
@@ -398,14 +395,12 @@ Dropin.prototype._initialize = function (callback) {
   }
 
   if (!container || container.nodeType !== 1) {
-    analytics.sendEvent(self._client, 'configuration-error');
     callback(new DropinError('options.selector or options.container must reference a valid DOM node.'));
 
     return;
   }
 
   if (container.innerHTML.trim()) {
-    analytics.sendEvent(self._client, 'configuration-error');
     callback(new DropinError('options.selector or options.container must reference an empty DOM node.'));
 
     return;
@@ -451,13 +446,11 @@ Dropin.prototype._initialize = function (callback) {
   self._model.initialize().then(function () {
     self._model.on('cancelInitialization', function (err) {
       self._dropinWrapper.innerHTML = '';
-      analytics.sendEvent(self._client, 'load-error');
       callback(err);
     });
 
     self._model.on('asyncDependenciesReady', function () {
       if (self._model.dependencySuccessCount >= 1) {
-        analytics.sendEvent(self._client, 'appeared');
         self._disableErroredPaymentMethods();
 
         self._handleAppSwitch();
@@ -721,8 +714,6 @@ Dropin.prototype._sendVaultedPaymentMethodAppearAnalyticsEvents = function () {
     }
 
     typesThatSentAnEvent[type] = true;
-
-    analytics.sendEvent(this._client, 'vaulted-' + constants.analyticsKinds[type] + '.appear');
   }
 };
 
