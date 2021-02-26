@@ -238,12 +238,16 @@ MainView.prototype.toggleAdditionalOptions = function () {
     if (this.model.getPaymentMethods().length === 0) {
       this.setPrimaryView(PaymentOptionsView.ID);
     } else {
-      this.setPrimaryView(PaymentMethodsView.ID, PaymentOptionsView.ID);
-      this.hideToggle();
+    	this.expandPaymentOptions();
     }
   } else {
     classList.add(this.element, prefixShowClass(PaymentOptionsView.ID));
   }
+};
+
+MainView.prototype.expandPaymentOptions = function() {
+      this.setPrimaryView(PaymentMethodsView.ID, PaymentOptionsView.ID);
+      this.hideToggle();
 };
 
 MainView.prototype.showToggle = function () {
@@ -326,9 +330,14 @@ MainView.prototype.disableEditMode = function () {
 
   this.hideSheetError();
   this.paymentMethodsViews.disableEditMode();
-  this.showToggle();
 
   paymentMethod = this.primaryView.getPaymentMethod();
+
+  if (this.model.shouldExpandPaymentOptions()) {
+		this.expandPaymentOptions();
+	} else {
+		this.showToggle();
+	}
 
   this.model.setPaymentMethodRequestable({
     isRequestable: Boolean(paymentMethod),
