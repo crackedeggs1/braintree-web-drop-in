@@ -35,9 +35,11 @@ BasePayPalView.prototype.initialize = function () {
 
   this.model.asyncDependencyStarting();
   asyncDependencyTimeoutHandler = setTimeout(function () {
-    self.model.asyncDependencyFailed({
-      view: self.ID,
-      error: new DropinError('There was an error connecting to PayPal.')
+    self.model.on('asyncDependencyQueue', function() {
+      self.model.asyncDependencyFailed({
+        view: self.ID,
+        error: new DropinError('There was an error connecting to PayPal.')
+      });
     });
   }, ASYNC_DEPENDENCY_TIMEOUT);
 
@@ -93,9 +95,11 @@ BasePayPalView.prototype.initialize = function () {
     buttonSelector = dropinWrapperId + ' ' + buttonSelector;
 
     return global.paypal.Button.render(checkoutJSConfiguration, buttonSelector).then(function () {
-      self.model.asyncDependencyReady();
-      setupComplete = true;
-      clearTimeout(asyncDependencyTimeoutHandler);
+      self.model.on('asyncDependencyQueue', function() {
+        self.model.asyncDependencyReady();
+        setupComplete = true;
+        clearTimeout(asyncDependencyTimeoutHandler);
+      });
     });
   }).catch(reportError);
 
@@ -103,11 +107,13 @@ BasePayPalView.prototype.initialize = function () {
     if (setupComplete) {
       self.model.reportError(err);
     } else {
-      self.model.asyncDependencyFailed({
-        view: self.ID,
-        error: err
+      self.model.on('asyncDependencyQueue', function() {
+        self.model.asyncDependencyFailed({
+          view: self.ID,
+          error: err
+        });
+        clearTimeout(asyncDependencyTimeoutHandler);
       });
-      clearTimeout(asyncDependencyTimeoutHandler);
     }
   }
 };
