@@ -47,6 +47,7 @@ GooglePayView.prototype.initialize = function () {
   return btGooglePay.create({
     client: self.client,
     googlePayVersion: googlePayVersion,
+    debug: (self.googlePayConfiguration.debug == undefined ? true : self.googlePayConfiguration.debug),
     googleMerchantId: merchantId
   }).then(function (googlePayInstance) {
     self.googlePayInstance = googlePayInstance;
