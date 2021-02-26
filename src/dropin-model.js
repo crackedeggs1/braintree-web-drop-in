@@ -338,6 +338,10 @@ DropinModel.prototype._getSupportedPaymentMethods = function (paymentMethods) {
   });
 };
 
+DropinModel.prototype.processAsyncDependencyQueue = function() {
+  this._emit('asyncDependencyQueue');
+};
+
 function getSupportedPaymentOptions(options) {
   var paymentOptionPriority = options.merchantConfiguration.paymentOptionPriority || DEFAULT_PAYMENT_OPTION_PRIORITY;
   var promises;
