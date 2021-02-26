@@ -341,7 +341,19 @@ DropinModel.prototype._getSupportedPaymentMethods = function (paymentMethods) {
 };
 
 DropinModel.prototype.processAsyncDependencyQueue = function() {
-  this._emit('asyncDependencyQueue');
+	var canQueue = true;
+	var event = 'asyncDependencyQueue';
+	if (this.dependenciesInitializing && (!this._events[event] || this.dependenciesInitializing != this._events[event].length))
+	{
+		setTimeout(function() {
+			this.processAsyncDependencyQueue();
+		}.bind(this), 100);
+		canQueue = false;
+	}
+
+	if (canQueue) {
+	  this._emit(event);
+	}
 };
 
 function getSupportedPaymentOptions(options) {
