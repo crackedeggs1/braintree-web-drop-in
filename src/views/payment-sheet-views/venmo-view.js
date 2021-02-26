@@ -37,31 +37,35 @@ VenmoView.prototype.initialize = function () {
       self.model.reportAppSwitchError(paymentOptionIDs.venmo, err);
     });
   }).then(function () {
-    var button = self.getElementById('venmo-button');
+    self.model.on('asyncDependencyQueue', function() {
+      var button = self.getElementById('venmo-button');
 
-    button.addEventListener('click', function (event) {
-      event.preventDefault();
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
 
-      self.preventUserAction();
+        self.preventUserAction();
 
-      return self.venmoInstance.tokenize().then(function (payload) {
-        self.model.addPaymentMethod(payload);
-      }).catch(function (tokenizeErr) {
-        if (self._isIgnorableError(tokenizeErr)) {
-          return;
-        }
+        return self.venmoInstance.tokenize().then(function (payload) {
+          self.model.addPaymentMethod(payload);
+        }).catch(function (tokenizeErr) {
+          if (self._isIgnorableError(tokenizeErr)) {
+            return;
+          }
 
-        self.model.reportError(tokenizeErr);
-      }).then(function () {
-        self.allowUserAction();
+          self.model.reportError(tokenizeErr);
+        }).then(function () {
+          self.allowUserAction();
+        });
       });
-    });
 
-    self.model.asyncDependencyReady();
+      self.model.asyncDependencyReady();
+    });
   }).catch(function (err) {
-    self.model.asyncDependencyFailed({
-      view: self.ID,
-      error: new DropinError(err)
+    self.model.on('asyncDependencyQueue', function() {
+      self.model.asyncDependencyFailed({
+        view: self.ID,
+        error: new DropinError(err)
+      });
     });
   });
 };
