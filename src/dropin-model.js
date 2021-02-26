@@ -250,6 +250,8 @@ DropinModel.prototype.asyncDependencyFailed = function (options) {
 DropinModel.prototype._checkAsyncDependencyFinished = function () {
   if (this.dependenciesInitializing === 0) {
     this._emit('asyncDependenciesReady');
+    // in case we only want to do some things after ALL dependencies have readied themselves
+    this._emit('afterAsyncDepdenciesReady');
   }
 };
 
