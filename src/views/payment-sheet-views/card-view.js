@@ -76,25 +76,29 @@ CardView.prototype.initialize = function () {
   this.model.asyncDependencyStarting();
 
   return hostedFields.create(hfOptions).then(function (hostedFieldsInstance) {
-    this.hostedFieldsInstance = hostedFieldsInstance;
-    this.hostedFieldsInstance.on('blur', this._onBlurEvent.bind(this));
-    this.hostedFieldsInstance.on('cardTypeChange', this._onCardTypeChangeEvent.bind(this));
-    this.hostedFieldsInstance.on('focus', this._onFocusEvent.bind(this));
-    this.hostedFieldsInstance.on('notEmpty', this._onNotEmptyEvent.bind(this));
-    this.hostedFieldsInstance.on('validityChange', this._onValidityChangeEvent.bind(this));
+    this.model.on('asyncDependencyQueue', function() {
+      this.hostedFieldsInstance = hostedFieldsInstance;
+      this.hostedFieldsInstance.on('blur', this._onBlurEvent.bind(this));
+      this.hostedFieldsInstance.on('cardTypeChange', this._onCardTypeChangeEvent.bind(this));
+      this.hostedFieldsInstance.on('focus', this._onFocusEvent.bind(this));
+      this.hostedFieldsInstance.on('notEmpty', this._onNotEmptyEvent.bind(this));
+      this.hostedFieldsInstance.on('validityChange', this._onValidityChangeEvent.bind(this));
 
-    PASSTHROUGH_EVENTS.forEach(function (eventName) {
-      this.hostedFieldsInstance.on(eventName, function (event) {
-        this.model._emit('card:' + eventName, event);
+      PASSTHROUGH_EVENTS.forEach(function (eventName) {
+        this.hostedFieldsInstance.on(eventName, function (event) {
+          this.model._emit('card:' + eventName, event);
+        }.bind(this));
       }.bind(this));
-    }.bind(this));
 
-    this.model.asyncDependencyReady();
+      this.model.asyncDependencyReady();
+    }.bind(this));
   }.bind(this)).catch(function (err) {
-    this.model.asyncDependencyFailed({
-      view: this.ID,
-      error: err
-    });
+    this.model.on('asyncDependencyQueue', function() {
+      this.model.asyncDependencyFailed({
+        view: this.ID,
+        error: err
+      });
+    }.bind(this));
   }.bind(this));
 };
 
