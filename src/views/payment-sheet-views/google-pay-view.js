@@ -53,15 +53,19 @@ GooglePayView.prototype.initialize = function () {
     self.googlePayInstance = googlePayInstance;
     self.paymentsClient = createPaymentsClient(self.client);
   }).then(function () {
-    var buttonContainer = self.getElementById('google-pay-button');
+    self.model.on('asyncDependencyQueue', function() {
+      var buttonContainer = self.getElementById('google-pay-button');
 
-    buttonContainer.appendChild(self.paymentsClient.createButton(buttonOptions));
+      buttonContainer.appendChild(self.paymentsClient.createButton(buttonOptions));
 
-    self.model.asyncDependencyReady();
+      self.model.asyncDependencyReady();
+    });
   }).catch(function (err) {
-    self.model.asyncDependencyFailed({
-      view: self.ID,
-      error: new DropinError(err)
+    self.model.on('asyncDependencyQueue', function() {
+      self.model.asyncDependencyFailed({
+        view: self.ID,
+        error: new DropinError(err)
+      });
     });
   });
 };
