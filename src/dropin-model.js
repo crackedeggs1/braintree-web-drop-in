@@ -232,6 +232,14 @@ DropinModel.prototype.asyncDependencyStarting = function () {
   this.dependenciesInitializing++;
 };
 
+/*
+* WARNING! Always wrap this like the following example, or your drop-in will never finish loading:
+*
+* referenceToDropinModel.on('asyncDependencyQueue', function() { 
+*    ... other code ...
+*    referenceToDropinModel.asyncDependencyReady();
+* });
+*/
 DropinModel.prototype.asyncDependencyReady = function () {
   this.dependencySuccessCount++;
   this.dependenciesInitializing--;
