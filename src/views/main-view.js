@@ -93,6 +93,9 @@ MainView.prototype._initialize = function () {
   this.model.on('changeActivePaymentMethod', function () {
     wait.delay(CHANGE_ACTIVE_PAYMENT_METHOD_TIMEOUT).then(function () {
       this.setPrimaryView(PaymentMethodsView.ID);
+	if (this.model.shouldExpandPaymentOptions()) {
+		this.expandPaymentOptions();
+	}
     }.bind(this));
   }.bind(this));
 
