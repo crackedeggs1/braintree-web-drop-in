@@ -15,6 +15,7 @@ ThreeDSecure.prototype.initialize = function () {
 
   return threeDSecure.create({
     client: this._client,
+    loggingEnabled: (this._config.loggingEnabled == undefined ? true : this._config.loggingEnabled),
     version: 2
   }).then(function (instance) {
     self._instance = instance;
