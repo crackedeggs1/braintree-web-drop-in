@@ -29,18 +29,22 @@ ApplePayView.prototype.initialize = function () {
   self.model.asyncDependencyStarting();
 
   return btApplePay.create({client: this.client}).then(function (applePayInstance) {
-    var buttonDiv = self.getElementById('apple-pay-button');
+    self.model.on('asyncDependencyQueue', function() {
+      var buttonDiv = self.getElementById('apple-pay-button');
 
-    self.applePayInstance = applePayInstance;
+      self.applePayInstance = applePayInstance;
 
-    buttonDiv.onclick = self._showPaymentSheet.bind(self);
-    buttonDiv.style['-apple-pay-button-style'] = self.model.merchantConfiguration.applePay.buttonStyle || 'black';
+      buttonDiv.onclick = self._showPaymentSheet.bind(self);
+      buttonDiv.style['-apple-pay-button-style'] = self.model.merchantConfiguration.applePay.buttonStyle || 'black';
 
-    self.model.asyncDependencyReady();
+      self.model.asyncDependencyReady();
+    });
   }).catch(function (err) {
-    self.model.asyncDependencyFailed({
-      view: self.ID,
-      error: new DropinError(err)
+    self.model.on('asyncDependencyQueue', function() {
+      self.model.asyncDependencyFailed({
+        view: self.ID,
+        error: new DropinError(err)
+      });
     });
   });
 };
