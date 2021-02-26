@@ -20,8 +20,15 @@ DataCollector.prototype.initialize = function () {
 
     braintreeWebVersion = self._config.client.getVersion();
 
+	  var dcSrc = 'https://js.braintreegateway.com/web/' + braintreeWebVersion + '/js/data-collector.min.js';
+
+	  if (self._config.src)
+	  {
+		  dcSrc = self._config.src;
+	  }
+
     return assets.loadScript({
-      src: 'https://js.braintreegateway.com/web/' + braintreeWebVersion + '/js/data-collector.min.js',
+      src: dcSrc,
       id: constants.DATA_COLLECTOR_SCRIPT_ID
     });
   }).then(function () {
