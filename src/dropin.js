@@ -598,7 +598,7 @@ Dropin.prototype._setUpDataCollector = function () {
   this._dataCollector = new DataCollector(config);
 
   self._dataCollector.initialize().then(function () {
-    this._model.on('asyncDepedencyQueue', function() {
+    self._model.on('asyncDepedencyQueue', function() {
       self._model.asyncDependencyReady();
     });
   }).catch(function (err) {
@@ -618,7 +618,7 @@ Dropin.prototype._setUpThreeDSecure = function () {
   this._threeDSecure = new ThreeDSecure(this._client, config);
 
   self._threeDSecure.initialize().then(function () {
-    this._model.on('asyncDependencyQueue', function() {
+    self._model.on('asyncDependencyQueue', function() {
       self._model.asyncDependencyReady();
     });
   }).catch(function (err) {
