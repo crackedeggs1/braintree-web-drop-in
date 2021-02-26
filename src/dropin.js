@@ -597,13 +597,15 @@ Dropin.prototype._setUpDataCollector = function () {
   this._model.asyncDependencyStarting();
   this._dataCollector = new DataCollector(config);
 
-  this._dataCollector.initialize().then(function () {
-    self._model.asyncDependencyReady();
-  }).catch(function (err) {
-    self._model.cancelInitialization(new DropinError({
-      message: 'Data Collector failed to set up.',
-      braintreeWebError: err
-    }));
+  this._model.on('asyncDepedencyQueue', function() {
+    self._dataCollector.initialize().then(function () {
+      self._model.asyncDependencyReady();
+    }).catch(function (err) {
+      self._model.cancelInitialization(new DropinError({
+        message: 'Data Collector failed to set up.',
+        braintreeWebError: err
+      }));
+    });
   });
 };
 
@@ -615,13 +617,15 @@ Dropin.prototype._setUpThreeDSecure = function () {
 
   this._threeDSecure = new ThreeDSecure(this._client, config);
 
-  this._threeDSecure.initialize().then(function () {
-    self._model.asyncDependencyReady();
-  }).catch(function (err) {
-    self._model.cancelInitialization(new DropinError({
-      message: '3D Secure failed to set up.',
-      braintreeWebError: err
-    }));
+  this._model.on('asyncDependencyQueue', function() {
+    self._threeDSecure.initialize().then(function () {
+      self._model.asyncDependencyReady();
+    }).catch(function (err) {
+      self._model.cancelInitialization(new DropinError({
+        message: '3D Secure failed to set up.',
+        braintreeWebError: err
+      }));
+    });
   });
 };
 
@@ -640,6 +644,8 @@ Dropin.prototype._setUpDependenciesAndViews = function () {
     model: this._model,
     strings: this._strings
   });
+
+  this._model.processAsyncDependencyQueue();
 };
 
 Dropin.prototype._removeUnvaultedPaymentMethods = function (filter) {
