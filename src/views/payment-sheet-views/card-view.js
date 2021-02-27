@@ -49,6 +49,7 @@ CardView.prototype.initialize = function () {
   this.cvvIcon = this.getElementById('cvv-icon');
   this.cvvIconSvg = this.getElementById('cvv-icon-svg');
   this.cvvLabelDescriptor = this.getElementById('cvv-label-descriptor');
+  this.cardNumberType = '';
   this.fieldErrors = {};
 
   if (!this.hasCardholderName) {
@@ -481,6 +482,11 @@ CardView.prototype._onCardTypeChangeEvent = function (event) {
   var cvvPlaceholder = addBullets(3);
   var numberFieldGroup = this.getElementById('number-field-group');
 
+	if (this.cardNumberIconType)
+	{
+		this.cardNumberIcon.classList.remove('braintree-icon--' + this.cardNumberIconType);
+	}
+
   if (event.cards.length === 1) {
     cardType = event.cards[0].type;
     cardNumberHrefLink = '#icon-' + cardType;
@@ -491,8 +497,11 @@ CardView.prototype._onCardTypeChangeEvent = function (event) {
     }
     // Keep icon visible when field is not focused
     classList.add(numberFieldGroup, 'braintree-form__field-group--card-type-known');
+	this.cardNumberIcon.classList.add('braintree-icon--' + cardType);
+	this.cardNumberIconType = cardType;
   } else {
     classList.remove(numberFieldGroup, 'braintree-form__field-group--card-type-known');
+	this.cardNumberIconType = "";
   }
 
   this.cardNumberIconSvg.setAttribute('xlink:href', cardNumberHrefLink);
