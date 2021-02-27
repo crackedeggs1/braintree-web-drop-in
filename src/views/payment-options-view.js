@@ -46,7 +46,7 @@ PaymentOptionsView.prototype._addPaymentOption = function (paymentOptionID) {
     case paymentOptionIDs.card:
       paymentSource = this.strings.Card;
       html = html.replace(/@ICON/g, 'iconCardFront');
-      html = html.replace(/@CLASSNAME/g, 'braintree-icon--bordered');
+      html = html.replace(/@CLASSNAME/g, '');
       break;
     case paymentOptionIDs.googlePay:
       paymentSource = this.strings['Google Pay'];
