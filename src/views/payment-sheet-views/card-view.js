@@ -313,7 +313,7 @@ CardView.prototype.tokenize = function () {
 
   var inputs = self.model.getInputs();
 
-  if (inputs.cardholderName && inputs.cardholderName.length &&  && !this.cardholderNameRequired) {
+  if (inputs.cardholderName && inputs.cardholderName.length && !this.cardholderNameRequired) {
     tokenizeOptions.cardholderName = inputs.cardholderName;
   }
 
