@@ -806,6 +806,16 @@ Dropin.prototype.requestPaymentMethod = function (options) {
 
   options = options || {};
 
+  if (options.billingAddress)
+	{
+		this._model.setInputValue('billingAddress', options.billingAddress);
+
+		if (options.billingAddress.fullName)
+		{
+			this._model.setInputValue('cardholderName', options.billingAddress.fullName);
+		}
+	}
+
   return this._mainView.requestPaymentMethod().then(function (payload) {
     if (self._shouldPerformThreeDSecureVerification(payload)) {
       self._mainView.showLoadingIndicator();
