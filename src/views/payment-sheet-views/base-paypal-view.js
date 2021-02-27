@@ -46,10 +46,16 @@ BasePayPalView.prototype.initialize = function () {
     var buttonSelector = '[data-braintree-id="paypal-button"]';
     var environment = self.client.getConfiguration().gatewayConfiguration.environment === 'production' ? 'production' : 'sandbox';
     var locale = self.model.merchantConfiguration.locale;
+    var offerCredit = Boolean(isCredit);
+
+	  if (self.paypalConfiguration.offerCredit != undefined)
+	  {
+		  offerCredit = self.paypalConfiguration.offerCredit;
+	  }
 
     self.paypalInstance = paypalInstance;
 
-    self.paypalConfiguration.offerCredit = Boolean(isCredit);
+    self.paypalConfiguration.offerCredit = offerCredit;
     checkoutJSConfiguration = {
       env: environment,
       style: self.paypalConfiguration.buttonStyle || {},
@@ -86,7 +92,7 @@ BasePayPalView.prototype.initialize = function () {
     if (isCredit) {
       buttonSelector = '[data-braintree-id="paypal-credit-button"]';
       checkoutJSConfiguration.style.label = 'credit';
-    } else {
+    } else if (!offerCredit) {
       checkoutJSConfiguration.funding.disallowed.push(global.paypal.FUNDING.CREDIT);
     }
 
