@@ -31,15 +31,15 @@ CardView.ID = CardView.prototype.ID = constants.paymentOptionIDs.card;
 CardView.prototype.initialize = function () {
   var cvvFieldGroup, postalCodeFieldGroup, hfOptions;
   var cardholderNameGroup = this.getElementById('cardholder-name-field-group');
-  var cardIcons = this.getElementById('card-view-icons');
 
+	this.cardIcons = this.getElementById('card-view-icons');
   this.merchantConfiguration = this.model.merchantConfiguration.card || {};
   this.merchantConfiguration.vault = this.merchantConfiguration.vault || {};
   this.hasCardholderName = Boolean(this.merchantConfiguration.cardholderName);
   this.cardholderNameRequired = this.hasCardholderName && this.merchantConfiguration.cardholderName.required === true;
   hfOptions = this._generateHostedFieldsOptions();
 
-  cardIcons.innerHTML = cardIconHTML;
+  this.cardIcons.innerHTML = cardIconHTML;
   this._hideUnsupportedCardIcons();
 
   this.hasCVV = hfOptions.fields.cvv;
@@ -485,6 +485,7 @@ CardView.prototype._onCardTypeChangeEvent = function (event) {
 	if (this.cardNumberIconType)
 	{
 		this.cardNumberIcon.classList.remove('braintree-icon--' + this.cardNumberIconType);
+		this.cardIcons.classList.remove('braintree-has-card--' + this.cardNumberIconType);
 	}
 
   if (event.cards.length === 1) {
@@ -497,8 +498,9 @@ CardView.prototype._onCardTypeChangeEvent = function (event) {
     }
     // Keep icon visible when field is not focused
     classList.add(numberFieldGroup, 'braintree-form__field-group--card-type-known');
-	this.cardNumberIcon.classList.add('braintree-icon--' + cardType);
-	this.cardNumberIconType = cardType;
+		this.cardNumberIcon.classList.add('braintree-icon--' + cardType);
+		this.cardIcons.classList.add('braintree-has-card--' + cardType);
+		this.cardNumberIconType = cardType;
   } else {
     classList.remove(numberFieldGroup, 'braintree-form__field-group--card-type-known');
 	this.cardNumberIconType = "";
