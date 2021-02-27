@@ -40,8 +40,9 @@ PaymentMethodView.prototype._initialize = function () {
     case paymentMethodTypes.card:
 	    this.element.addClass('braintree-method__card');
       endingInText = this.strings.endingIn.replace('{{lastFourCardDigits}}', this.paymentMethod.details.lastFour);
-      html = html.replace(/@ICON/g, 'icon-' + paymentMethodCardTypes[this.paymentMethod.details.cardType])
-        .replace(/@CLASSNAME/g, '')
+	var cardType = paymentMethodCardTypes[this.paymentMethod.details.cardType];
+      html = html.replace(/@ICON/g, 'icon-' + cardType)
+        .replace(/@CLASSNAME/g, ' braintree-icon--' + cardType)
         .replace(/@TITLE/g, endingInText)
         .replace(/@SUBTITLE/g, this.strings[this.paymentMethod.details.cardType]);
       break;
@@ -56,7 +57,7 @@ PaymentMethodView.prototype._initialize = function () {
 	    this.element.addClass('braintree-method__paypal');
       html = html.replace(/@ICON/g, 'logoPayPal')
         .replace(/@CLASSNAME/g, '')
-        .replace(/@TITLE/g, this.paymentMethod.details.email)
+        .replace(/@TITLE/g, this.paymentMethod.details.email.replace(/([\.@])/, '$1&#8203;'))
         .replace(/@SUBTITLE/g, this.strings.PayPal);
       break;
     case paymentMethodTypes.venmo:
