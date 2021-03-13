@@ -37,7 +37,12 @@ var PASS_THROUGH_EVENTS = [
   'card:focus',
   'card:inputSubmitRequest',
   'card:notEmpty',
-  'card:validityChange'
+  'card:validityChange',
+
+  // 3DS Events
+  '3ds:customer-canceled',
+  '3ds:authentication-modal-render',
+  '3ds:authentication-modal-close'
 ];
 var UPDATABLE_CONFIGURATION_OPTIONS = [
   paymentOptionIDs.paypal,
@@ -164,6 +169,11 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  *  * [`card:inputSubmitRequest`](#event:card:inputSubmitRequest)
  *  * [`card:notEmpty`](#event:card:notEmpty)
  *  * [`card:validityChange`](#event:card:validityChange)
+ *
+ *  _3DS Specific Events_
+ *  * [`3ds:customer-canceled`](#event:3ds:customer-canceled)
+ *  * [`3ds:authentication-modal-render`](#event:3ds:authentication-modal-render)
+ *  * [`3ds:authentication-modal-close`](#event:3ds:authentication-modal-close)
  * @returns {void}
  * @example
  * <caption>Dynamically enable or disable your submit button based on whether or not the payment method is requestable</caption>
@@ -349,6 +359,24 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  */
 
 /**
+ * The underlying [3D Secure `customer-canceled` event](http://braintree.github.io/braintree-web/{@pkg bt-web-version}/ThreeDSecure.html#event:customer-canceled).
+ * @event Dropin#3ds:customer-canceled
+ * @type {Dropin~3ds:customer-canceled}
+ */
+
+/**
+ * The underlying [3D Secure `authentication-modal-render` event](http://braintree.github.io/braintree-web/{@pkg bt-web-version}/ThreeDSecure.html#event:authentication-modal-render).
+ * @event Dropin#3ds:authentication-modal-render
+ * @type {Dropin~3ds:authentication-modal-render}
+ */
+
+/**
+ * The underlying [3D Secure `authentication-modal-close` event](http://braintree.github.io/braintree-web/{@pkg bt-web-version}/ThreeDSecure.html#event:authentication-modal-close).
+ * @event Dropin#3ds:authentication-modal-close
+ * @type {Dropin~3ds:authentication-modal-close}
+ */
+
+/**
  * @typedef {object} Dropin~paymentOptionSelectedPayload
  * @description The event payload sent from {@link Dropin#on|`on`} with the {@link Dropin#event:paymentOptionSelected|`paymentOptionSelected`} event.
  * @property {string} paymentOption The payment option view selected. Either `card`, `paypal`, or `paypalCredit`.
@@ -450,7 +478,8 @@ Dropin.prototype._initialize = function (callback) {
     });
 
     self._model.on('asyncDependenciesReady', function () {
-      if (self._model.dependencySuccessCount >= 1) {
+      if (self._model.hasAtLeastOneAvailablePaymentOption()) {
+        analytics.sendEvent(self._client, 'appeared');
         self._disableErroredPaymentMethods();
 
         self._handleAppSwitch();
@@ -594,11 +623,10 @@ Dropin.prototype._setUpDataCollector = function () {
   var self = this;
   var config = assign({}, self._merchantConfiguration.dataCollector, {client: self._client});
 
-  this._model.asyncDependencyStarting();
   this._dataCollector = new DataCollector(config);
 
   this._dataCollector.initialize().then(function () {
-    self._model.asyncDependencyReady();
+    self._model.asyncDependencyReady('dataCollector');
   }).catch(function (err) {
     self._model.cancelInitialization(new DropinError({
       message: 'Data Collector failed to set up.',
@@ -609,14 +637,11 @@ Dropin.prototype._setUpDataCollector = function () {
 
 Dropin.prototype._setUpThreeDSecure = function () {
   var self = this;
-  var config = assign({}, this._merchantConfiguration.threeDSecure);
 
-  this._model.asyncDependencyStarting();
-
-  this._threeDSecure = new ThreeDSecure(this._client, config);
+  this._threeDSecure = new ThreeDSecure(this._client, this._model);
 
   this._threeDSecure.initialize().then(function () {
-    self._model.asyncDependencyReady();
+    self._model.asyncDependencyReady('threeDSecure');
   }).catch(function (err) {
     self._model.cancelInitialization(new DropinError({
       message: '3D Secure failed to set up.',
