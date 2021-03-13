@@ -1,5 +1,7 @@
 'use strict';
 
+var analytics = require('../lib/analytics');
+var analyticsKinds = require('../constants').analyticsKinds;
 var BaseView = require('./base-view');
 var classList = require('@braintree/class-list');
 var sheetViews = require('./payment-sheet-views');
@@ -208,8 +210,12 @@ MainView.prototype.requestPaymentMethod = function () {
   var activePaymentView = this.getView(this.model.getActivePaymentView());
 
   return activePaymentView.requestPaymentMethod().then(function (payload) {
+    analytics.sendEvent(this.client, 'request-payment-method.' + analyticsKinds[payload.type]);
+
     return payload;
   }.bind(this)).catch(function (err) {
+    analytics.sendEvent(this.client, 'request-payment-method.error');
+
     return Promise.reject(err);
   }.bind(this));
 };
@@ -390,6 +396,8 @@ MainView.prototype._sendToDefaultView = function () {
 
   if (paymentMethods.length > 0) {
     if (preselectVaultedPaymentMethod) {
+      analytics.sendEvent(this.client, 'vaulted-card.preselect');
+
       this.model.changeActivePaymentMethod(paymentMethods[0]);
     } else {
       this.setPrimaryView(this.paymentMethodsViews.ID);
