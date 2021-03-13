@@ -1,5 +1,6 @@
 'use strict';
 
+var analytics = require('../../lib/analytics');
 var assign = require('../../lib/assign').assign;
 var browserDetection = require('../../lib/browser-detection');
 var BaseView = require('../base-view');
@@ -138,6 +139,8 @@ BasePayPalView.isEnabled = function (options) {
   }
 
   if (browserDetection.isIe9() || browserDetection.isIe10()) {
+    analytics.sendEvent(options.client, options.viewID + '.checkout.js-browser-not-supported');
+
     return Promise.resolve(false);
   }
 
