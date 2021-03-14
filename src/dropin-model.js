@@ -33,6 +33,7 @@ function DropinModel(options) {
   this.componentID = options.componentID;
   this.merchantConfiguration = options.merchantConfiguration;
   this.isGuestCheckout = isGuestCheckout(options.client);
+  this.vaultedMethodUsage = 0;
 
   this.dependencyStates = ASYNC_DEPENDENCIES.reduce(function (total, dependencyKey) {
     if (dependencyKey in options.merchantConfiguration) {
@@ -119,6 +120,7 @@ DropinModel.prototype.removePaymentMethod = function (paymentMethod) {
   }
 
   this._paymentMethods.splice(paymentMethodLocation, 1);
+
   this._emit('removePaymentMethod', paymentMethod);
 };
 
@@ -130,6 +132,13 @@ DropinModel.prototype.refreshPaymentMethods = function () {
 
     self._emit('refreshPaymentMethods');
   });
+};
+
+DropinModel.prototype.vaultLimitReached = function() {
+  if (!this.merchantConfiguration.maxVaultedMethods || this.vaultedMethodUsage < this.merchantConfiguration.maxVaultedMethods) {
+    return false;
+  }
+  return true;
 };
 
 DropinModel.prototype.changeActivePaymentMethod = function (paymentMethod) {
@@ -302,9 +311,17 @@ DropinModel.prototype.deleteVaultedPaymentMethod = function () {
   this._emit('startVaultedPaymentMethodDeletion');
 
   if (!self.isGuestCheckout) {
-    promise = this._vaultManager.deletePaymentMethod(this._paymentMethodWaitingToBeDeleted.nonce).catch(function (err) {
-      error = err;
-    });
+	if (this.merchantConfiguration.vaultManually) {
+	  // need to notify server
+	  this._emit('removeVaultedPaymentMethodManually', {
+	    vaultedMethod: this._paymentMethodWaitingToBeDeleted,
+		promiseOverride: promise
+	  });
+    } else {
+      promise = this._vaultManager.deletePaymentMethod(this._paymentMethodWaitingToBeDeleted.nonce).catch(function (err) {
+        error = err;
+      });
+	}
   }
 
   return promise.then(function () {
@@ -333,6 +350,7 @@ DropinModel.prototype.getVaultedPaymentMethods = function () {
   return self._vaultManager.fetchPaymentMethods({
     defaultFirst: this.merchantConfiguration.showDefaultPaymentMethodFirst !== false
   }).then(function (paymentMethods) {
+	self.vaultedMethodUsage = paymentMethods.length;
     return self._getSupportedPaymentMethods(paymentMethods).map(function (paymentMethod) {
       paymentMethod.vaulted = true;
 

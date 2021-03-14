@@ -41,6 +41,10 @@ MainView.prototype._initialize = function () {
   this.disableWrapper = this.getElementById('disable-wrapper');
   this.lowerContainer = this.getElementById('lower-container');
 
+  this.vaultCheckbox = this.getElementById('vault-checkbox');
+  this.vaultCheckboxInput = this.vaultCheckbox.querySelector('input');
+  this.element.innerHTML = this.element.innerHTML.replace('{{vaultCheckboxLabel}}', this.strings['vaultCheckboxLabel']);
+
   this.loadingContainer = this.getElementById('loading-container');
   this.dropinContainer = this.element.querySelector('.braintree-dropin');
 
@@ -92,9 +96,10 @@ MainView.prototype._initialize = function () {
 
   addSelectionEventHandler(this.toggle, this.toggleAdditionalOptions.bind(this));
 
-  this.model.on('changeActivePaymentMethod', function () {
+  this.model.on('changeActivePaymentMethod', function (paymentMethod) {
     wait.delay(CHANGE_ACTIVE_PAYMENT_METHOD_TIMEOUT).then(function () {
       this.setPrimaryView(PaymentMethodsView.ID);
+	  this.setVaultCheckboxState(paymentMethod);
     }.bind(this));
   }.bind(this));
 
@@ -106,6 +111,7 @@ MainView.prototype._initialize = function () {
     if (activePaymentView && typeof activePaymentView.removeActivePaymentMethod === 'function') {
       activePaymentView.removeActivePaymentMethod();
     }
+	this.setVaultCheckboxState();
   }.bind(this));
 
   this.model.on('enableEditMode', this.enableEditMode.bind(this));
@@ -130,6 +136,39 @@ MainView.prototype._initialize = function () {
   }
 
   this._sendToDefaultView();
+};
+
+MainView.prototype.setVaultCheckboxState = function(paymentMethod) {
+  if (!this.vaultCheckbox) {
+	return;
+  }
+  if (!this.model.merchantConfiguration.vaultManually) {
+	// remove checkbox
+	this.vaultCheckbox.parentNode.removeChild(this.vaultCheckbox);
+	this.vaultCheckbox = null;
+	return;
+  }
+
+  var hClass = "braintree-hidden";
+
+  if (!paymentMethod) {
+	// hide checkbox
+	if (!this.vaultCheckbox.classList.contains(hClass)) {
+	  classList.add(this.vaultCheckbox, hClass);
+	}
+  } else if (!paymentMethod.vaulted) {
+	classList.remove(this.vaultCheckbox, hClass);
+
+	if (this.vaultLimitReached()) {
+	  // disable checkbox
+	  this.vaultCheckboxInput.setAttribute("disabled", "disabled");
+	} else {
+	  this.vaultCheckboxInput.removeAttribute("disabled");
+	}
+  } else if (!this.vaultCheckbox.classList.contains(hClass)) {
+	// hide checkbox
+	classList.add(this.vaultCheckbox, hClass);
+  }
 };
 
 MainView.prototype._onChangeActivePaymentMethodView = function (id) {
@@ -205,12 +244,19 @@ MainView.prototype.setPrimaryView = function (id, secondaryViewId) {
 
 MainView.prototype.requestPaymentMethod = function () {
   var activePaymentView = this.getView(this.model.getActivePaymentView());
+  var guestCheckout = this.model.isGuestCheckout;
+
+  if (this.model.merchantConfiguration.vaultManually) {
+	this.model.isGuestCheckout = false;
+  }
 
   return activePaymentView.requestPaymentMethod().then(function (payload) {
+	this.model.isGuestCheckout = guestCheckout;
     analytics.sendEvent(this.client, 'request-payment-method.' + analyticsKinds[payload.type]);
 
     return payload;
   }.bind(this)).catch(function (err) {
+	this.model.isGuestCheckout = guestCheckout;
     analytics.sendEvent(this.client, 'request-payment-method.error');
 
     return Promise.reject(err);

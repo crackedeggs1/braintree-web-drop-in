@@ -65,7 +65,7 @@ CardView.prototype.initialize = function () {
     postalCodeFieldGroup.parentNode.removeChild(postalCodeFieldGroup);
   }
 
-  if (!this.model.isGuestCheckout && this.merchantConfiguration.vault.allowVaultCardOverride === true) {
+  if (!this.model.isGuestCheckout && this.merchantConfiguration.vault.allowVaultCardOverride === true && !this.model.vaultLimitReached()) {
     classList.remove(this.getElementById('save-card-field-group'), 'braintree-hidden');
   }
 
