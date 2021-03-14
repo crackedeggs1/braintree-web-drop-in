@@ -54,6 +54,7 @@ module.exports = {
   expirationDatePlaceholder: 'mm/yy',
   postalCodeLabel: 'Postal code',
   saveCardLabel: 'Save card',
+  vaultCheckboxLabel: 'Save payment method',
   payWithCard: 'Pay with card',
   // Payment Method descriptions
   endingIn: 'Ending in {{lastFourCardDigits}}',
