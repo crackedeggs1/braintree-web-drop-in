@@ -182,8 +182,13 @@ DropinModel.prototype.isInEditMode = function () {
 };
 
 DropinModel.prototype.confirmPaymentMethodDeletion = function (paymentMethod) {
-  this._paymentMethodWaitingToBeDeleted = paymentMethod;
-  this._emit('confirmPaymentMethodDeletion', paymentMethod);
+  if (this.merchantConfiguration.vaultManually) {
+	// need to notify server
+	this._emit('confirmVaultedPaymentMethodDeletionManually', paymentMethod);
+  } else {
+	this._paymentMethodWaitingToBeDeleted = paymentMethod;
+	this._emit('confirmPaymentMethodDeletion', paymentMethod);
+  }
 };
 
 DropinModel.prototype._shouldEmitRequestableEvent = function (options) {
