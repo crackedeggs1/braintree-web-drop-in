@@ -51,6 +51,9 @@ CardView.prototype.initialize = function () {
   this.cvvLabelDescriptor = this.getElementById('cvv-label-descriptor');
   this.fieldErrors = {};
 
+  this.vaultCheckbox = null;
+  this.vaultCheckboxInput = null;
+
   if (!this.hasCardholderName) {
     cardholderNameGroup.parentNode.removeChild(cardholderNameGroup);
   }
@@ -65,8 +68,25 @@ CardView.prototype.initialize = function () {
     postalCodeFieldGroup.parentNode.removeChild(postalCodeFieldGroup);
   }
 
-  if (!this.model.isGuestCheckout && this.merchantConfiguration.vault.allowVaultCardOverride === true && !this.model.vaultLimitReached()) {
-    classList.remove(this.getElementById('save-card-field-group'), 'braintree-hidden');
+  if (!this.model.isGuestCheckout && this.merchantConfiguration.vault.allowVaultCardOverride === true) {
+    var saveGroup = this.getElementById('save-card-field-group');
+    if (this.model.merchantConfiguration.vaultManually) {
+      var methodBox = this.model.rootNode.getElementsByClassName('braintree-vault-checkbox-container')[0];
+      if (methodBox) {
+        var saveMethod = methodBox.cloneNode(true);
+        saveGroup.replaceWith(saveMethod);
+
+        this.vaultCheckbox = saveMethod;
+        this.vaultCheckboxInput = this.vaultCheckbox.querySelector("input");
+
+        this.model.on('changeActivePaymentView', this._onChangeActivePaymentMethodView.bind(this));
+      }
+    } else if (this.model.vaultLimitReached()) {
+      classList.add(saveGroup, 'braintree-hidden');
+      this.saveCardInput.checked = false;
+    } else {
+      classList.remove(saveGroup, 'braintree-hidden');
+    }
   }
 
   if (this.merchantConfiguration.vault.vaultCard === false) {
@@ -94,6 +114,15 @@ CardView.prototype.initialize = function () {
       error: err
     });
   }.bind(this));
+};
+
+CardView.prototype._onChangeActivePaymentMethodView = function(id) {
+  if (id != 'card') {
+    return;
+  }
+  this.model.setVaultCheckboxState(this, {
+    vaulted: false
+  });
 };
 
 CardView.prototype._sendRequestableEvent = function () {
