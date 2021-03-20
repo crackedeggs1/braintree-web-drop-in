@@ -186,6 +186,14 @@ DropinModel.prototype.confirmPaymentMethodDeletion = function (paymentMethod) {
   }
 };
 
+DropinModel.prototype.shouldExpandPaymentOptions = function () {
+  return Boolean(
+    this.merchantConfiguration.expandOtherWaysToPay &&
+    this.getPaymentMethods().length > 0 &&
+    this.supportedPaymentOptions.length > 1
+  );
+};
+
 DropinModel.prototype._shouldEmitRequestableEvent = function (options) {
   var requestableStateHasNotChanged = this.isPaymentMethodRequestable() === options.isRequestable;
   var nonce = options.selectedPaymentMethod && options.selectedPaymentMethod.nonce;

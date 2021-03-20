@@ -32,37 +32,37 @@ PaymentMethodView.prototype._initialize = function () {
 
   switch (this.paymentMethod.type) {
     case paymentMethodTypes.applePay:
-	    this.element.addClass('braintree-method__applePay');
+      classList.add(this.element, 'braintree-method__applePay');
       html = html.replace(/@ICON/g, 'logoApplePay')
         .replace(/@CLASSNAME/g, '')
         .replace(/@TITLE/g, this.strings['Apple Pay'])
         .replace(/@SUBTITLE/g, '');
       break;
     case paymentMethodTypes.card:
-	    this.element.addClass('braintree-method__card');
+      classList.add(this.element, 'braintree-method__card');
       endingInText = this.strings.endingIn.replace('{{lastFourCardDigits}}', this.paymentMethod.details.lastFour);
-	var cardType = paymentMethodCardTypes[this.paymentMethod.details.cardType];
+      var cardType = paymentMethodCardTypes[this.paymentMethod.details.cardType];
       html = html.replace(/@ICON/g, 'icon-' + cardType)
         .replace(/@CLASSNAME/g, ' braintree-icon--' + cardType)
         .replace(/@TITLE/g, endingInText)
         .replace(/@SUBTITLE/g, this.strings[this.paymentMethod.details.cardType]);
       break;
     case paymentMethodTypes.googlePay:
-	    this.element.addClass('braintree-method__googlePay');
+      classList.add(this.element, 'braintree-method__googlePay');
       html = html.replace(/@ICON/g, 'logoGooglePay')
         .replace(/@CLASSNAME/g, '')
         .replace(/@TITLE/g, this.strings['Google Pay'])
         .replace(/@SUBTITLE/g, '');
       break;
     case paymentMethodTypes.paypal:
-	    this.element.addClass('braintree-method__paypal');
+      classList.add(this.element, 'braintree-method__paypal');
       html = html.replace(/@ICON/g, 'logoPayPal')
         .replace(/@CLASSNAME/g, '')
         .replace(/@TITLE/g, this.paymentMethod.details.email.replace(/([\.@])/, '$1&#8203;'))
         .replace(/@SUBTITLE/g, this.strings.PayPal);
       break;
     case paymentMethodTypes.venmo:
-	    this.element.addClass('braintree-method__venmo');
+      classList.add(this.element, 'braintree-method__venmo');
       html = html.replace(/@ICON/g, 'logoVenmo')
         .replace(/@CLASSNAME/g, '')
         .replace(/@TITLE/g, this.paymentMethod.details.username)

@@ -586,7 +586,9 @@ CardView.prototype._hideUnsupportedCardIcons = function () {
 
     if (supportedCardTypes.indexOf(configurationCardType) === -1) {
       cardIcon = this.getElementById(paymentMethodCardType + '-card-icon');
-      classList.add(cardIcon, 'braintree-hidden');
+	  if (cardIcon) {
+        classList.add(cardIcon, 'braintree-hidden');
+	  }
     }
   }.bind(this));
 };

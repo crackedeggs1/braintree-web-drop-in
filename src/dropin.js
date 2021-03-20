@@ -488,6 +488,10 @@ Dropin.prototype._initialize = function (callback) {
         analytics.sendEvent(self._client, 'appeared');
         self._disableErroredPaymentMethods();
 
+        if (self._model.shouldExpandPaymentOptions()) {
+          self._mainView.expandPaymentOptions();
+        }
+
         self._handleAppSwitch();
 
         self._model.confirmDropinReady();
