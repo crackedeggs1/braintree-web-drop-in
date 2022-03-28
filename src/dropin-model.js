@@ -3,6 +3,7 @@
 var analytics = require('./lib/analytics');
 var DropinError = require('./lib/dropin-error');
 var EventEmitter = require('@braintree/event-emitter');
+var classList = require('@braintree/class-list');
 var constants = require('./constants');
 var paymentMethodTypes = constants.paymentMethodTypes;
 var paymentOptionIDs = constants.paymentOptionIDs;
@@ -92,6 +93,37 @@ DropinModel.prototype.initialize = function () {
     self._paymentMethods = paymentMethods;
     self._paymentMethodIsRequestable = self._paymentMethods.length > 0;
   });
+};
+
+DropinModel.prototype.setVaultCheckboxState = function(view, paymentMethod) {
+  if (!view.vaultCheckbox) {
+	return;
+  }
+  if (!this.merchantConfiguration.vaultManually) {
+	// remove checkbox
+	view.vaultCheckbox.parentNode.removeChild(view.vaultCheckbox);
+	view.vaultCheckbox = null;
+	return;
+  }
+
+  var hClass = "braintree-hidden";
+
+  if (!paymentMethod) {
+    // hide checkbox
+    classList.add(view.vaultCheckbox, hClass);
+  } else if (!paymentMethod.vaulted) {
+    classList.remove(view.vaultCheckbox, hClass);
+
+    if (this.vaultLimitReached()) {
+      // disable checkbox
+      view.vaultCheckboxInput.setAttribute("disabled", "disabled");
+    } else {
+      view.vaultCheckboxInput.removeAttribute("disabled");
+    }
+  } else {
+    // hide checkbox
+    classList.add(view.vaultCheckbox, hClass);
+  }
 };
 
 DropinModel.prototype.confirmDropinReady = function () {
