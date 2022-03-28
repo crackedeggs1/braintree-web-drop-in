@@ -11,7 +11,6 @@ var assets = require('@braintree/asset-loader');
 var fs = require('fs');
 var MainView = require('./views/main-view');
 var paymentMethodsViewID = require('./views/payment-methods-view').ID;
-var paymentOptionsViewID = require('./views/payment-options-view').ID;
 var paymentOptionIDs = constants.paymentOptionIDs;
 var translations = require('./translations').translations;
 var isUtf8 = require('./lib/is-utf-8');
@@ -424,7 +423,7 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  * @class
  * @param {object} options For create options, see {@link module:braintree-web-drop-in|dropin.create}.
  * @description <strong>Do not use this constructor directly. Use {@link module:braintree-web-drop-in|dropin.create} instead.</strong>
- * @classdesc This class represents a Drop-in component, that will create a pre-made UI for accepting cards and PayPal on your page. Instances of this class have methods for requesting a payment method and subscribing to events. For more information, see the [Drop-in guide](https://developers.braintreepayments.com/guides/drop-in/javascript/v3) in the Braintree Developer Docs. To be used in conjunction with the [Braintree Server SDKs](https://developers.braintreepayments.com/start/hello-server/).
+ * @classdesc This class represents a Drop-in component, that will create a pre-made UI for accepting cards and PayPal on your page. Instances of this class have methods for requesting a payment method and subscribing to events. For more information, see the [Drop-in guide](https://developer.paypal.com/braintree/docs/guides/drop-in/overview/javascript/v3) in the Braintree Developer Docs. To be used in conjunction with the [Braintree Server SDKs](https://developer.paypal.com/braintree/docs/start/hello-server).
  */
 function Dropin(options) {
   this._client = options.client;
@@ -725,22 +724,17 @@ Dropin.prototype._removeUnvaultedPaymentMethods = function (filter) {
 };
 
 Dropin.prototype._navigateToInitialView = function () {
-  var hasNoSavedPaymentMethods, hasOnlyOneSupportedPaymentOption;
   var isOnMethodsView = this._mainView.primaryView.ID === paymentMethodsViewID;
 
-  if (isOnMethodsView) {
-    hasNoSavedPaymentMethods = this._model.getPaymentMethods().length === 0;
-
-    if (hasNoSavedPaymentMethods) {
-      hasOnlyOneSupportedPaymentOption = this._model.supportedPaymentOptions.length === 1;
-
-      if (hasOnlyOneSupportedPaymentOption) {
-        this._mainView.setPrimaryView(this._model.supportedPaymentOptions[0]);
-      } else {
-        this._mainView.setPrimaryView(paymentOptionsViewID);
-      }
-    }
+  if (!isOnMethodsView) {
+    return;
   }
+
+  if (this._model.hasPaymentMethods()) {
+    return;
+  }
+
+  this._mainView.setPrimaryView(this._model.getInitialViewId());
 };
 
 Dropin.prototype._supportsPaymentOption = function (paymentOption) {
@@ -803,7 +797,7 @@ Dropin.prototype._handleAppSwitch = function () {
 };
 
 /**
- * Requests a payment method object which includes the payment method nonce used by by the [Braintree Server SDKs](https://developers.braintreepayments.com/start/hello-server/).
+ * Requests a payment method object which includes the payment method nonce used by by the [Braintree Server SDKs](https://developer.paypal.com/braintree/docs/start/hello-server).
  *
  * If a payment method is not available, an error will appear in the UI. When a callback is used, an error will be passed to it. If no callback is used, the returned Promise will be rejected with an error.
  * @public

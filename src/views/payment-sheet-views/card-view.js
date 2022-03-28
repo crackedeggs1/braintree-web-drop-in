@@ -31,9 +31,15 @@ CardView.ID = CardView.prototype.ID = constants.paymentOptionIDs.card;
 CardView.prototype.initialize = function () {
   var cvvFieldGroup, postalCodeFieldGroup, hfOptions;
   var cardholderNameGroup = this.getElementById('cardholder-name-field-group');
-
-	this.cardIcons = this.getElementById('card-view-icons');
-  this.merchantConfiguration = this.model.merchantConfiguration.card || {};
+  this.cardIcons = this.getElementById('card-view-icons');
+  // If merchant explicty passes a value of `true` for card configuration,
+  // we need to treat it as if no card configuration was passed, and provide
+  // the default configuration
+  if (this.model.merchantConfiguration.card && this.model.merchantConfiguration.card !== true) {
+    this.merchantConfiguration = this.model.merchantConfiguration.card;
+  } else {
+    this.merchantConfiguration = {};
+  }
   this.merchantConfiguration.vault = this.merchantConfiguration.vault || {};
   this.hasCardholderName = Boolean(this.merchantConfiguration.cardholderName);
   this.cardholderNameRequired = this.hasCardholderName && this.merchantConfiguration.cardholderName.required === true;
@@ -608,6 +614,8 @@ CardView.prototype.onSelection = function () {
       this.hostedFieldsInstance.focus('number');
     }
   }.bind(this), 50);
+
+  this._sendRequestableEvent();
 };
 
 CardView.prototype._hideUnsupportedCardIcons = function () {

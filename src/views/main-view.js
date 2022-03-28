@@ -98,7 +98,16 @@ MainView.prototype._initialize = function () {
 
   this.model.on('changeActivePaymentMethod', function (paymentMethod) {
     wait.delay(CHANGE_ACTIVE_PAYMENT_METHOD_TIMEOUT).then(function () {
-      this.setPrimaryView(PaymentMethodsView.ID);
+      var id = PaymentMethodsView.ID;
+
+      // if Drop-in gets into the state where it's told to go to the methods
+      // view, but there are no saved payment methods, it should instead
+      // redirect to the view it started on
+      if (!this.model.hasPaymentMethods()) {
+        id = this.model.getInitialViewId();
+      }
+
+      this.setPrimaryView(id);
 
       if (this.model.shouldExpandPaymentOptions()) {
 		this.expandPaymentOptions();
