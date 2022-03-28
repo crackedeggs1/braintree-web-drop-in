@@ -26,6 +26,7 @@ var mainHTML = fs.readFileSync(__dirname + '/html/main.html', 'utf8');
 var svgHTML = fs.readFileSync(__dirname + '/html/svgs.html', 'utf8');
 
 var PASS_THROUGH_EVENTS = [
+  'changeActiveView',
   'paymentMethodRequestable',
   'noPaymentMethodRequestable',
   'paymentOptionSelected',
@@ -157,6 +158,7 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  * @param {function} handler A callback to handle the event.
  * @description Subscribes a handler function to a named event. `event` should be one of the following:
  *
+ *  * [`changeActiveView`](#event:changeActiveView)
  *  * [`paymentMethodRequestable`](#event:paymentMethodRequestable)
  *  * [`noPaymentMethodRequestable`](#event:noPaymentMethodRequestable)
  *  * [`paymentOptionSelected`](#event:paymentOptionSelected)
@@ -248,6 +250,19 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  *   });
  * });
  * @example
+ * <caption>Listen for when the customer navigates to different views in Drop-in</caption>
+ * braintree.dropin.create({
+ *   authorization: 'CLIENT_AUTHORIZATION',
+ *   container: '#dropin-container'
+ * }, function (err, dropinInstance) {
+ *   dropinInstance.on('changeActiveView', function (event) {
+ *     // fires when the view changes, such as going from the
+ *     // credit card view to the saved payment methods view
+ *     event.oldActivePaymentViewId; // card
+ *     event.newActivePaymentViewId; // methods
+ *   });
+ * });
+ * @example
  * <caption>Listen on various events from the card view</caption>
  * braintree.dropin.create({
  *   authorization: 'CLIENT_AUTHORIZATION',
@@ -309,6 +324,28 @@ HAS_RAW_PAYMENT_DATA[constants.paymentMethodTypes.applePay] = true;
  * This event is emitted when the customer selects a new payment option type (e.g. PayPal, PayPal Credit, credit card). This event is not emitted when the user changes between existing saved payment methods. Only relevant when accepting multiple payment options.
  * @event Dropin#paymentOptionSelected
  * @type {Dropin~paymentOptionSelectedPayload}
+ */
+
+/**
+ * This event is emitted when the Drop-in view changes what is presented as the active view.
+ * @event Dropin#changeActiveView
+ * @type {Dropin~changeActiveView}
+ */
+
+/**
+ * @typedef {object} Dropin~changeActiveView
+ * @description The event payload sent from {@link Dropin#on|`on`} with the {@link Dropin#event:changeActiveView|`changeActiveView`} event.
+ * @property {string} previousViewId The id for the previously active view. Possible values are:
+ * * `card` - The credit card form view
+ * * `paypal` - The PayPal view
+ * * `payapCredit` - The PayPal Credit view
+ * * `venmo` - The Venmo View
+ * * `googlePay` - The Google Pay view
+ * * `applePay` - The Apple Pay view
+ * * `methods` - The view presenting the available payment methods (already vaulted or tokenized payment methods)
+ * * `options` - The view presenting the available payment options (where the customer chooses what payment method option to use). Note, if both the methods view and the options view are presented at the same time, `methods` will be shown as the view id.
+ * * `delete-confirmation` - The view where the customer confirms they would like to delete their saved payment method.
+ * @property {string} newViewId The id for the new active view. The possible values are the same as `previousViewId`.
  */
 
 /**
@@ -839,6 +876,13 @@ Dropin.prototype._handleAppSwitch = function () {
  * });
  */
 Dropin.prototype.requestPaymentMethod = function (options) {
+  // NEXT_MAJOR_VERSION
+  // what should happen when this method is called while a payment
+  // method is already being requested? Should it error? Should
+  // they both resolve with the payload from the original request?
+  // this is only important because when doing 3ds, multiple
+  // requests in quick succession can get you into a state
+  // where it errors because the 3ds verification is called twice
   var self = this;
 
   options = options || {};
@@ -867,9 +911,16 @@ Dropin.prototype.requestPaymentMethod = function (options) {
 
         return payload;
       }).catch(function (err) {
-        self._mainView.hideLoadingIndicator();
+        self.clearSelectedPaymentMethod();
 
-        return Promise.reject(err);
+        return self._model.refreshPaymentMethods().then(function () {
+          self._mainView.hideLoadingIndicator();
+
+          return Promise.reject(new DropinError({
+            message: 'Something went wrong during 3D Secure authentication. Please try again.',
+            braintreeWebError: err
+          }));
+        });
       });
     }
 

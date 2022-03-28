@@ -37,7 +37,7 @@ function DropinModel(options) {
   this.vaultedMethodUsage = 0;
 
   this.dependencyStates = ASYNC_DEPENDENCIES.reduce(function (total, dependencyKey) {
-    if (dependencyKey in options.merchantConfiguration) {
+    if (options.merchantConfiguration[dependencyKey]) {
       total[dependencyKey] = dependencySetupStates.INITIALIZING;
     }
 
@@ -65,10 +65,10 @@ function DropinModel(options) {
 EventEmitter.createChild(DropinModel);
 
 DropinModel.prototype.initialize = function () {
+  var dep;
   var self = this;
   var dependencyReadyInterval = setInterval(function () {
-    for (var dep in self.dependencyStates)
-    {
+    for (dep in self.dependencyStates) {
       if (self.dependencyStates[dep] === dependencySetupStates.INITIALIZING) {
         return;
       }
@@ -174,9 +174,14 @@ DropinModel.prototype.changeActivePaymentMethod = function (paymentMethod) {
   this._emit('changeActivePaymentMethod', paymentMethod);
 };
 
-DropinModel.prototype.changeActivePaymentView = function (paymentViewID) {
-  this._activePaymentView = paymentViewID;
-  this._emit('changeActivePaymentView', paymentViewID);
+DropinModel.prototype.changeActiveView = function (paymentViewID) {
+  var previousViewId = this._activePaymentViewId;
+
+  this._activePaymentViewId = paymentViewID;
+  this._emit('changeActiveView', {
+    previousViewId: previousViewId,
+    newViewId: paymentViewID
+  });
 };
 
 DropinModel.prototype.removeActivePaymentMethod = function () {
@@ -292,8 +297,8 @@ DropinModel.prototype.getActivePaymentMethod = function () {
   return this._activePaymentMethod;
 };
 
-DropinModel.prototype.getActivePaymentView = function () {
-  return this._activePaymentView;
+DropinModel.prototype.getActivePaymentViewId = function () {
+  return this._activePaymentViewId;
 };
 
 DropinModel.prototype.reportAppSwitchPayload = function (payload) {

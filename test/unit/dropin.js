@@ -1,6 +1,7 @@
 
 const Dropin = require('../../src/dropin');
 const DropinModel = require('../../src/dropin-model');
+const MainView = require('../../src/views/main-view');
 const EventEmitter = require('@braintree/event-emitter');
 const assets = require('@braintree/asset-loader');
 const analytics = require('../../src/lib/analytics');
@@ -1312,6 +1313,81 @@ describe('Dropin', () => {
         });
       });
     });
+
+    test('rejects when 3D Secure authentication fails', (done) => {
+      const fakePayload = {
+        nonce: 'cool-nonce',
+        type: 'CreditCard'
+      };
+
+      testContext.dropinOptions.merchantConfiguration.threeDSecure = {};
+
+      const instance = new Dropin(testContext.dropinOptions);
+
+      instance._initialize(() => {
+        jest.spyOn(instance._mainView, 'requestPaymentMethod').mockResolvedValue(fakePayload);
+        instance._threeDSecure = {
+          verify: jest.fn().mockRejectedValue(new Error('some 3ds error'))
+        };
+
+        instance.requestPaymentMethod((err) => {
+          expect(err.message).toBe('Something went wrong during 3D Secure authentication. Please try again.');
+          expect(err._braintreeWebError.message).toBe('some 3ds error');
+
+          done();
+        });
+      });
+    });
+
+    test('removes consumed credit card payment method when 3D Secure authentication fails', (done) => {
+      const fakePayload = {
+        nonce: 'cool-nonce',
+        type: 'CreditCard'
+      };
+
+      testContext.dropinOptions.merchantConfiguration.threeDSecure = {};
+
+      const instance = new Dropin(testContext.dropinOptions);
+
+      instance._initialize(() => {
+        jest.spyOn(instance, 'clearSelectedPaymentMethod').mockImplementation();
+        jest.spyOn(instance._mainView, 'requestPaymentMethod').mockResolvedValue(fakePayload);
+        instance._threeDSecure = {
+          verify: jest.fn().mockRejectedValue(new Error('some 3ds error'))
+        };
+
+        instance.requestPaymentMethod(() => {
+          expect(instance.clearSelectedPaymentMethod).toBeCalledTimes(1);
+
+          done();
+        });
+      });
+    });
+
+    test('refreshes vaulted payment methods when 3D Secure authentication fails', (done) => {
+      const fakePayload = {
+        nonce: 'cool-nonce',
+        type: 'CreditCard'
+      };
+
+      testContext.dropinOptions.merchantConfiguration.threeDSecure = {};
+
+      const instance = new Dropin(testContext.dropinOptions);
+
+      instance._initialize(() => {
+        jest.spyOn(instance._model, 'refreshPaymentMethods').mockResolvedValue();
+        jest.spyOn(instance._mainView, 'requestPaymentMethod').mockResolvedValue(fakePayload);
+        instance._threeDSecure = {
+          verify: jest.fn().mockRejectedValue(new Error('some 3ds error'))
+        };
+
+        instance.requestPaymentMethod(() => {
+          expect(instance._model.refreshPaymentMethods).toBeCalledTimes(1);
+
+          done();
+        });
+      });
+    });
   });
 
   describe('isPaymentMethodRequestable', () => {
@@ -2239,38 +2315,37 @@ describe('Dropin', () => {
     });
   });
 
-  describe('payment method requestable events', () => {
-    test(
-      'emits paymentMethodRequestable event when the model emits paymentMethodRequestable',
-      done => {
-        const instance = new Dropin(testContext.dropinOptions);
+  describe('passthrough drop-in events', () => {
+    beforeEach(() => {
+      // the payload for the changeActiveView event is not quite
+      // accurate and it ends up throwing an error during the other
+      // tests for the events, so we stub the method that recieves
+      // the changeActiveView event to prevent that from causing
+      // our tests to fail. Is this a bit of a smell? yes, do
+      // I have the bandwidth to figure out a better way? no.
+      // sorry future Blade.
+      jest.spyOn(MainView.prototype, '_onChangeActiveView').mockImplementation();
+    });
 
-        instance.on('paymentMethodRequestable', event => {
-          expect(event.type).toBe('Foo');
+    test.each([
+      'changeActiveView',
+      'paymentMethodRequestable',
+      'noPaymentMethodRequestable',
+      'paymentOptionSelected'
+    ])('emits %s event', (eventName, done) => {
+      const instance = new Dropin(testContext.dropinOptions);
+      const eventPayload = { foo: 'bar' };
 
-          done();
-        });
+      instance.on(eventName, event => {
+        expect(event).toBe(eventPayload);
 
-        instance._initialize(() => {
-          instance._model._emit('paymentMethodRequestable', { type: 'Foo' });
-        });
-      }
-    );
+        done();
+      });
 
-    test(
-      'emits noPaymentMethodRequestable events when the model emits noPaymentMethodRequestable',
-      done => {
-        const instance = new Dropin(testContext.dropinOptions);
-
-        instance.on('noPaymentMethodRequestable', () => {
-          done();
-        });
-
-        instance._initialize(() => {
-          instance._model._emit('noPaymentMethodRequestable');
-        });
-      }
-    );
+      instance._initialize(() => {
+        instance._model._emit(eventName, eventPayload);
+      });
+    });
   });
 
   describe('card events', () => {
